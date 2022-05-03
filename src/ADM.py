@@ -3,9 +3,12 @@ from numba import njit  # Version when written 0.51.2
 from scipy.interpolate import interp1d
 from metadata import MOV_DUR_IN_SEC, SAMP_FREQ
 from src.SpikeModels import *
+from utils import *
+
 
 #
-# def ADM(input_signal, threshold_UP, threshold_DOWN, sampling_frequency, refractory_period_duration, return_indices=True,
+# def ADM(input_signal, threshold_UP, threshold_DOWN, sampling_frequency, refractory_period_duration,
+# return_indices=True,
 #         index_dt=1e-4):
 #     dt = 1 / sampling_frequency
 #     end_time = len(input_signal) * dt
@@ -156,37 +159,37 @@ from src.SpikeModels import *
 #     return (spike_t_up, spike_t_dn, times_interpolated, spike_idx_up, spike_idx_dn)
 #
 #
-# class Line:
-#     '''straight line that goes through points:
-#         p1: (i*dt, x1)
-#         p2: ((i+1)*dt, x2)
-#     '''
-#
-#     def __init__(self, i, dt, x1, x2):
-#         self.m = (x2 - x1) / dt
-#         self.n = (i + 1) * x1 - i * x2
-#         self.x1 = x1
-#         self.x2 = x2
-#
-#     def f(self, t):
-#         ''' straight line through (t1,x1) and (t2,x2): f(t) = t*m + n'''
-#         return self.m * t + self.n
-#
-#     def g(self, x):
-#         ''' inverse of straight line fx: g(x) = (x-n)/m. Assumes m!=0'''
-#         return (x - self.n) / self.m
-#
-#     def in_range(self, x, v_thr):
-#         ''' checks if x±v_thr is in [x1,x2] or [x2,x1] '''
-#         mn = min(self.x1, self.x2)
-#         mx = max(self.x1, self.x2)
-#         if (mn <= x + v_thr < mx):
-#             return 1
-#         elif (mn <= x - v_thr < mx):
-#             return -1
-#         else:
-#             return 0
-#
+class Line:
+    '''straight line that goes through points:
+        p1: (i*dt, x1)
+        p2: ((i+1)*dt, x2)
+    '''
+
+    def __init__(self, i, dt, x1, x2):
+        self.m = (x2 - x1) / dt
+        self.n = (i + 1) * x1 - i * x2
+        self.x1 = x1
+        self.x2 = x2
+
+    def f(self, t):
+        ''' straight line through (t1,x1) and (t2,x2): f(t) = t*m + n'''
+        return self.m * t + self.n
+
+    def g(self, x):
+        ''' inverse of straight line fx: g(x) = (x-n)/m. Assumes m!=0'''
+        return (x - self.n) / self.m
+
+    def in_range(self, x, v_thr):
+        ''' checks if x±v_thr is in [x1,x2] or [x2,x1] '''
+        mn = min(self.x1, self.x2)
+        mx = max(self.x1, self.x2)
+        if (mn <= x + v_thr < mx):
+            return 1
+        elif (mn <= x - v_thr < mx):
+            return -1
+        else:
+            return 0
+
 
 def digitalize_sigma_J(x_in, v_thr, t_ref, dt):
     '''
@@ -248,32 +251,15 @@ def digitalize_sigma_J(x_in, v_thr, t_ref, dt):
 
                 # 6- Record the number of spikes in this sampling period + add spike times to list
                 if np.sign(x.m) > 0:
-                    # spike_time_isi = np.diff(spike_time)
-                    # if np.any(spike_time_isi < t_ref):
-                    #     print("PROBLEM with spike_time inside UP\n")
                     spike_up.append(k + 1)
                     spike_dn.append(0)
                     spike_time_up.extend(spike_time)
 
                 else:
-                    # if len(spike_time_dn) > 1:
-                    #     last_prev_frag = spike_time_dn[-1]
-                    #     first_new_frag = spike_time[0]
-                    #     second_new_frag = spike_time[1]
-                    #     print("Before:{}      After:{}  diff-inter:{}  diff-within:{}  tref:{}".format(
-                    #     last_prev_frag, first_new_frag,
-                    #                                                       first_new_frag - last_prev_frag,
-                    #                                                                                    second_new_frag - first_new_frag,
-                    #                                                                                    t_ref))
 
                     spike_up.append(0)
                     spike_dn.append(k + 1)
                     spike_time_dn.extend(spike_time)
-                    spike_time_isi = np.diff(
-                        spike_time_dn)  # if np.any(spike_time_isi < t_ref):  #     print("PROBLEM with spike_time  #
-                    # inside DN\n")
-
-
 
             else:
                 # slope is not steep enough in current time interval
@@ -287,6 +273,8 @@ def digitalize_sigma_J(x_in, v_thr, t_ref, dt):
             # therefore no spikes
             spike_up.append(0)
             spike_dn.append(0)
+    check_sp_ref_period(spike_up, spike_dn, t_ref)
+
     return y, spike_up, spike_dn, spike_time_up, spike_time_dn
 
 

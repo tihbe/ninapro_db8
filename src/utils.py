@@ -7,6 +7,7 @@ import logging
 import pandas as pd
 from metadata import SAMP_FREQ, subject, MOV_DUR_IN_SEC, COLOR_DICT
 import matplotlib.pyplot as plt
+from ADM import digitalize_sigma_J
 
 
 # import seaborn as sns
@@ -41,6 +42,19 @@ def extract_rec_info(mat):
     logging.info(f"Creating time axis: \nbeg {rec_time[:5]} \nend {rec_time[-5:]}\n")
     logging.info(f"sEMG Channels: {n_ch}")
     return rec_time, n_ch
+
+
+def check_sp_ref_period(t_up, t_dn, t_ref):
+    isi_up = np.diff(t_up)
+    isi_dn = np.diff(t_dn)
+    assert np.any(isi_up < t_ref), "t_ref between the encoded UP spikes is note respected!"
+    assert np.any(isi_dn < t_ref), "t_ref between the encoded DN spikes is note respected!"
+
+    # if np.any(isi_up < T_REF):  #     min_isi_loc = np.argwhere(isi_up < T_REF).flatten()  #     first_sp =  #  #
+    # np.asarray(t_up)[min_isi_loc]  #     second_sp = np.asarray(t_up)[min_isi_loc + 1]  #     print("ISI:\n{  #  #
+    # }\n".format(second_sp - first_sp))  # if np.any(isi_dn < T_REF):  #     min_isi_loc = np.argwhere(isi_dn <  #
+    # T_REF).flatten()  #     first_sp = np.asarray(t_dn)[min_isi_loc]  #     second_sp = np.asarray(t_dn)[  #  #  #
+    # min_isi_loc + 1]  #     print("ISI:\n{}\n".format(second_sp - first_sp))
 
 
 def plot_spikes(X, reconst, time, dn_sp, up_sp):
