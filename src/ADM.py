@@ -2,7 +2,6 @@ import numpy as np  # Version when written 1.19.2
 from numba import njit  # Version when written 0.51.2
 from scipy.interpolate import interp1d
 from metadata import MOV_DUR_IN_SEC, SAMP_FREQ
-from src.SpikeModels import *
 
 
 # from src.utils import check_sp_ref_period
@@ -12,10 +11,10 @@ def check_sp_ref_period(t_up, t_dn, t_ref):
     assert np.any(isi_up < t_ref), "t_ref between the encoded UP spikes is note respected!"
     assert np.any(isi_dn < t_ref), "t_ref between the encoded DN spikes is note respected!"
 
-    # if np.any(isi_up < T_REF):  #     min_isi_loc = np.argwhere(isi_up < T_REF).flatten()  #     first_sp =  #  #
-    # np.asarray(t_up)[min_isi_loc]  #     second_sp = np.asarray(t_up)[min_isi_loc + 1]  #     print("ISI:\n{  #  #
-    # }\n".format(second_sp - first_sp))  # if np.any(isi_dn < T_REF):  #     min_isi_loc = np.argwhere(isi_dn <  #
-    # T_REF).flatten()  #     first_sp = np.asarray(t_dn)[min_isi_loc]  #     second_sp = np.asarray(t_dn)[  #  #  #
+    # if np.any(isi_up < T_REF):  #     min_isi_loc = np.argwhere(isi_up < T_REF).flatten()  #     first_sp =  #  #    
+    # np.asarray(t_up)[min_isi_loc]  #     second_sp = np.asarray(t_up)[min_isi_loc + 1]  #     print("ISI:\n{  #  #    
+    # }\n".format(second_sp - first_sp))  # if np.any(isi_dn < T_REF):  #     min_isi_loc = np.argwhere(isi_dn <  #    
+    # T_REF).flatten()  #     first_sp = np.asarray(t_dn)[min_isi_loc]  #     second_sp = np.asarray(t_dn)[  #  #  #    
     # min_isi_loc + 1]  #     print("ISI:\n{}\n".format(second_sp - first_sp))
 
 
