@@ -9,13 +9,21 @@ train_set = NinaProDB8Lite("dataset")
 sampling_frequency = 2000
 
 for i, (emg, glove) in enumerate(train_set):
-    emg_duration, nb_channels = emg.shape
+
     glove_gaussian_filtered = gaussian_filter1d(glove, sigma=500)
 
+    # Remove plateaus
+    plateaus = np.isclose(np.diff(glove_gaussian_filtered), 0, atol=1e-3)
+    emg = emg[:-1, :][~plateaus, :]
+    glove_gaussian_filtered = glove_gaussian_filtered[:-1][~plateaus]
+
+    # Convert glove to uint8
     glove_gaussian_filtered = glove_gaussian_filtered / glove_gaussian_filtered.max() * 255
     glove_gaussian_filtered = glove_gaussian_filtered.astype(np.uint8)
 
     env_emg = np.abs(scipy.signal.hilbert(emg, axis=0))
+
+    emg_duration, nb_channels = emg.shape
 
     # Custom a-LIF encoding
     mem_pot = np.zeros(nb_channels)
@@ -28,7 +36,7 @@ for i, (emg, glove) in enumerate(train_set):
     th_inc = env_emg.mean()
     th_tau = 0.500
 
-    spikes = np.empty((emg_duration, nb_channels), dtype=np.int8)
+    spikes = np.empty((emg_duration, nb_channels), dtype=np.uint8)
 
     cst = np.exp(-dt / tau)
     cst_th = np.exp(-dt / th_tau)
